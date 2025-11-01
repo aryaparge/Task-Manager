@@ -23,6 +23,15 @@ public class Task {
     @JoinColumn(name = "category_id")
     private Category category;
 
+    @Enumerated(EnumType.STRING)
+    private Status status;
+
+    public enum Status {
+        TODO,
+        IN_PROGRESS,
+        DONE
+    }
+
     public int getId() {
         return id;
     }
@@ -85,5 +94,13 @@ public class Task {
 
     public void setCompleted(boolean completed) {
         this.completed = completed;
+    }
+
+    public Status getStatus() {
+        return status;
+    }
+
+    public void setStatus(Status status) {
+        this.status = status;
     }
 }

@@ -15,8 +15,10 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/tasks")
 public class TaskController {
+
     @Autowired
     private TaskRepo taskRepo;
+
     @Autowired
     private CategoryRepo categoryRepo;
 
@@ -30,16 +32,13 @@ public class TaskController {
                         return categoryRepo.save(c);
                     });
 
-            List<Task> tasksWithoutCategory = taskRepo.findAll()
-                    .stream()
+            taskRepo.findAll().stream()
                     .filter(t -> t.getCategory() == null)
-                    .toList();
+                    .forEach(t -> t.setCategory(uncategorized));
 
-            for (Task t : tasksWithoutCategory) {
-                t.setCategory(uncategorized);
-            }
-
-            taskRepo.saveAll(tasksWithoutCategory);
+            taskRepo.saveAll(taskRepo.findAll().stream()
+                    .filter(t -> t.getCategory() == null)
+                    .toList());
         };
     }
 
@@ -48,47 +47,69 @@ public class TaskController {
         return taskRepo.findAll();
     }
 
-    @PostMapping("/tasks")
-    public Task createTask(@RequestBody Task task, @RequestParam Long categoryId) {
-        Category category = categoryRepo.findById(categoryId)
-                .orElseThrow(() -> new RuntimeException("Category not found"));
+    @PostMapping
+    public Task createTask(@RequestBody Task task,
+            @RequestParam(required = false) Long categoryId) {
+        Category category = categoryId != null
+                ? categoryRepo.findById(categoryId).orElseThrow(() -> new RuntimeException("Category not found"))
+                : categoryRepo.findByName("Uncategorized")
+                        .orElseThrow(() -> new RuntimeException("Default category missing"));
         task.setCategory(category);
+
+        if (task.getStatus() == null) {
+            task.setStatus(Task.Status.TODO); 
+        }
+
         return taskRepo.save(task);
     }
 
     @PutMapping("/{id}")
     public Task updateTask(@PathVariable Long id, @RequestBody Task updatedTask,
             @RequestParam(required = false) Long categoryId) {
-        Task task = taskRepo.findById(id).orElseThrow();
+        Task task = taskRepo.findById(id).orElseThrow(() -> new RuntimeException("Task not found"));
+
         task.setTitle(updatedTask.getTitle());
         task.setDescription(updatedTask.getDescription());
         task.setDueDate(updatedTask.getDueDate());
         task.setDueTime(updatedTask.getDueTime());
         task.setPriority(updatedTask.getPriority());
         task.setCompleted(updatedTask.isCompleted());
+        task.setStatus(updatedTask.getStatus()); // update status
 
-        Category category;
-        if (categoryId != null) {
-            category = categoryRepo.findById(categoryId)
-                    .orElseThrow(() -> new RuntimeException("Category not found"));
-        } else {
-            category = categoryRepo.findByName("Uncategorized")
-                    .orElseThrow(() -> new RuntimeException("Default category missing"));
-        }
+        Category category = categoryId != null
+                ? categoryRepo.findById(categoryId).orElseThrow(() -> new RuntimeException("Category not found"))
+                : categoryRepo.findByName("Uncategorized")
+                        .orElseThrow(() -> new RuntimeException("Default category missing"));
+
         task.setCategory(category);
 
         return taskRepo.save(task);
     }
 
-    @PutMapping("/tasks/{id}/category")
+    @PutMapping("/{id}/category")
     public Task updateTaskCategory(@PathVariable Long id, @RequestParam Long categoryId) {
-        Task task = taskRepo.findById(id).orElseThrow();
-        Category category = categoryRepo.findById(categoryId).orElseThrow();
+        Task task = taskRepo.findById(id).orElseThrow(() -> new RuntimeException("Task not found"));
+        Category category = categoryRepo.findById(categoryId)
+                .orElseThrow(() -> new RuntimeException("Category not found"));
         task.setCategory(category);
         return taskRepo.save(task);
     }
 
-    @GetMapping("/tasks/{id}")
+    @PutMapping("/{id}/status")
+    public Task updateTaskStatus(@PathVariable Long id, @RequestParam Task.Status status) {
+        Task task = taskRepo.findById(id).orElseThrow(() -> new RuntimeException("Task not found"));
+        task.setStatus(status);
+        return taskRepo.save(task);
+    }
+
+    @PutMapping("/{id}/toggle")
+    public Task toggleCompleted(@PathVariable Long id) {
+        Task task = taskRepo.findById(id).orElseThrow(() -> new RuntimeException("Task not found"));
+        task.setCompleted(!task.isCompleted());
+        return taskRepo.save(task);
+    }
+
+    @GetMapping("/{id}")
     public Task getTask(@PathVariable Long id) {
         return taskRepo.findById(id).orElseThrow(() -> new RuntimeException("Task not found"));
     }
@@ -97,14 +118,4 @@ public class TaskController {
     public void deleteTask(@PathVariable Long id) {
         taskRepo.deleteById(id);
     }
-
-    @PutMapping("/{id}/toggle")
-    public Task toggleCompleted(@PathVariable Long id) {
-        Task task = taskRepo.findById(id).orElseThrow();
-        task.setCompleted(!task.isCompleted());
-        return taskRepo.save(task);
-    }
-
-    
-
 }

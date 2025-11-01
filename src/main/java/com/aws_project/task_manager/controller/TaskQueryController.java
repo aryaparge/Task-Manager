@@ -4,6 +4,7 @@ import com.aws_project.task_manager.model.Priority;
 import com.aws_project.task_manager.model.Task;
 import com.aws_project.task_manager.repo.TaskRepo;
 import com.aws_project.task_manager.spec.TaskSpecifications;
+
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.web.bind.annotation.*;
@@ -21,15 +22,11 @@ public class TaskQueryController {
         this.taskRepo = taskRepo;
     }
 
-    /**
-     * Example:
-     * GET
-     * /api/tasks?categoryId=1&priority=HIGH&q=report&from=2025-11-01&to=2025-11-30&sort=dueDate,asc
-     */
     @GetMapping("/search")
     public List<Task> searchTasks(
             @RequestParam(required = false) Long categoryId,
             @RequestParam(required = false) Priority priority,
+            @RequestParam(required = false) Task.Status status,
             @RequestParam(required = false) String q,
             @RequestParam(required = false) String from,
             @RequestParam(required = false) String to,
@@ -40,18 +37,19 @@ public class TaskQueryController {
 
         Specification<Task> spec = Specification.where(TaskSpecifications.hasCategoryId(categoryId))
                 .and(TaskSpecifications.hasPriority(priority))
+                .and(TaskSpecifications.hasStatus(status))
                 .and(TaskSpecifications.dueDateBetween(fromDate, toDate))
                 .and(TaskSpecifications.titleOrDescriptionContains(q));
 
-        // parse sort param like "dueDate,asc" or "priority,desc" or "createdAt,desc"
         String[] sortParts = sort.split(",");
         Sort s;
         if (sortParts.length == 2) {
             s = Sort.by(Sort.Direction.fromString(sortParts[1].trim()), sortParts[0].trim());
         } else {
-            s = Sort.by(sort); // fallback single field
+            s = Sort.by(sort);
         }
 
         return taskRepo.findAll(spec, s);
     }
+
 }

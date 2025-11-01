@@ -16,6 +16,10 @@ public final class TaskSpecifications {
         return (root, query, cb) -> categoryId == null ? null : cb.equal(root.get("category").get("id"), categoryId);
     }
 
+    public static Specification<Task> hasStatus(Task.Status status) {
+        return (root, query, cb) -> status == null ? null : cb.equal(root.get("status"), status);
+    }
+
     public static Specification<Task> hasPriority(Priority priority) {
         return (root, query, cb) -> priority == null ? null : cb.equal(root.get("priority"), priority);
     }
