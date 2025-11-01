@@ -16,8 +16,12 @@ public class Task {
     private LocalTime dueTime;
     private boolean completed;
 
-     @Enumerated(EnumType.STRING)
+    @Enumerated(EnumType.STRING)
     private Priority priority;
+
+    @ManyToOne
+    @JoinColumn(name = "category_id")
+    private Category category;
 
     public int getId() {
         return id;
@@ -41,6 +45,14 @@ public class Task {
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    public Category getCategory() {
+        return category;
+    }
+
+    public void setCategory(Category category) {
+        this.category = category;
     }
 
     public LocalDate getDueDate() {

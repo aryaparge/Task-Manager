@@ -67,14 +67,6 @@
 			<optional>true</optional>
 		</dependency>
 
-		<!-- Lombok, for cleaner code if you like it -->
-		<dependency>
-			<groupId>org.projectlombok</groupId>
-			<artifactId>lombok</artifactId>
-			<optional>true</optional>
-			<scope>provided</scope>
-		</dependency>
-
 	</dependencies>
 
 	<build>
