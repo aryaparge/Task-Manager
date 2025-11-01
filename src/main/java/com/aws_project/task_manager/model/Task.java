@@ -8,20 +8,22 @@ import java.time.LocalTime;
 public class Task {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private int id;
 
     private String title;
     private String description;
     private LocalDate dueDate;
     private LocalTime dueTime;
-    private String priority;
     private boolean completed;
 
-    public Long getId() {
+     @Enumerated(EnumType.STRING)
+    private Priority priority;
+
+    public int getId() {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setId(int id) {
         this.id = id;
     }
 
@@ -57,11 +59,11 @@ public class Task {
         this.dueTime = dueTime;
     }
 
-    public String getPriority() {
+    public Priority getPriority() {
         return priority;
     }
 
-    public void setPriority(String priority) {
+    public void setPriority(Priority priority) {
         this.priority = priority;
     }
 
