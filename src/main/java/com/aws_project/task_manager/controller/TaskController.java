@@ -57,7 +57,7 @@ public class TaskController {
         task.setCategory(category);
 
         if (task.getStatus() == null) {
-            task.setStatus(Task.Status.TODO); 
+            task.setStatus(Task.Status.TODO);
         }
 
         return taskRepo.save(task);
@@ -99,6 +99,13 @@ public class TaskController {
     public Task updateTaskStatus(@PathVariable Long id, @RequestParam Task.Status status) {
         Task task = taskRepo.findById(id).orElseThrow(() -> new RuntimeException("Task not found"));
         task.setStatus(status);
+
+        if (status == Task.Status.DONE) {
+            task.setCompleted(true);
+        } else {
+            task.setCompleted(false);
+        }
+
         return taskRepo.save(task);
     }
 
@@ -106,6 +113,13 @@ public class TaskController {
     public Task toggleCompleted(@PathVariable Long id) {
         Task task = taskRepo.findById(id).orElseThrow(() -> new RuntimeException("Task not found"));
         task.setCompleted(!task.isCompleted());
+
+        if (task.isCompleted()) {
+            task.setStatus(Task.Status.DONE);
+        } else if (task.getStatus() == Task.Status.DONE) {
+            task.setStatus(Task.Status.TODO);
+        }
+
         return taskRepo.save(task);
     }
 
